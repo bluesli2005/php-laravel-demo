@@ -15,10 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        WelcomeMessage::query()->updateOrCreate([
-            'id' => 1,
+        WelcomeMessage::query()->firstOrCreate([
+            'page' => 'home',
         ], [
             'content' => 'Hello from PostgreSQL!',
+        ]);
+
+        WelcomeMessage::query()->firstOrCreate([
+            'page' => 'about',
+        ], [
+            'content' => 'Welcome to About!',
         ]);
     }
 }

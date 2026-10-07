@@ -7,11 +7,11 @@
 1. 方法 2，Laravel + Inertia + Vue：前后端在同一个 Laravel 项目中。
 2. 方法 3，Vue SPA + Laravel API：前后端完全分离，通过 HTTP API 通信。
 
-本文是架构选型文档，不代表两种方案已经实施。当前建议优先采用方法 2，出现独立客户端或独立部署需求后再考虑方法 3。
+当前已采用方法 2：Laravel + Inertia + Vue。方法 3 保留作未来独立客户端或独立部署时的选型参考。
 
 ## 2. 当前系统
 
-当前项目是一个单体 Laravel 应用：
+当前项目是一个 Laravel + Inertia + Vue 单体应用：
 
 - PHP 8.5
 - Laravel 13
@@ -28,11 +28,11 @@
   -> routes/web.php
   -> WelcomeMessage Eloquent 模型
   -> PostgreSQL welcome_messages 表
-  -> resources/views/welcome.blade.php
-  -> HTML 响应
+  -> Inertia 将数据传给 Home / About Vue 页面
+  -> resources/views/app.blade.php 作为应用根模板
 ```
 
-目前还没有安装 Vue、Inertia，也没有独立 API。数据库中保存一条欢迎信息，Laravel 查询后交给 Blade 页面显示。
+数据库中保存 Home 和 About 两条欢迎信息，Laravel 分别传给对应的 Vue 页面。导航使用普通 `<a>` 链接；当前没有独立 API。
 
 ## 3. 方法 2：Laravel + Inertia + Vue
 
@@ -64,7 +64,10 @@ php-test/
 │       ├── Components/        # 通用 Vue 组件
 │       ├── Layouts/           # 页面布局
 │       ├── Pages/             # 与 Laravel 路由对应的页面
-│       │   └── Welcome.vue
+│       │   ├── Home.vue
+│       │   ├── About.vue
+│       │   ├── Services.vue
+│       │   └── Contact.vue
 │       ├── Types/             # TypeScript 类型
 │       └── app.ts             # Vue/Inertia 入口
 ├── routes/
@@ -81,9 +84,9 @@ php-test/
 ```text
 浏览器访问 /
   -> Laravel Web 路由
-  -> Controller 查询 WelcomeMessage
-  -> Inertia::render('Welcome', props)
-  -> Welcome.vue 接收 props
+  -> 查询 Home 的 WelcomeMessage
+  -> Inertia::render('Home', props)
+  -> Home.vue 接收 props
   -> Vue 渲染页面
 ```
 
@@ -309,17 +312,7 @@ Vue 获取 CSRF Cookie
 
 ## 6. 对当前项目的建议
 
-当前项目只有一个 Web 欢迎页、一个 PostgreSQL 数据表，并且 Laravel 与前端预计由同一套代码维护，因此优先采用方法 2：Laravel + Inertia + Vue。
-
-建议的实施顺序：
-
-1. 安装 Node.js LTS、Vue 3、TypeScript、Inertia 和 Vue Vite 插件。
-2. 建立 Inertia 根模板与 `resources/js/app.ts`。
-3. 将欢迎页迁移为 `resources/js/Pages/Welcome.vue`。
-4. 保留 `WelcomeMessage` 模型和 PostgreSQL 结构。
-5. 将首页查询移入 Controller，并返回 Inertia 页面属性。
-6. 增加覆盖数据库查询和页面属性的 Feature Test。
-7. 更新本地开发命令，使 Laravel 和 Vite 可以同时启动。
+当前项目已采用方法 2。Home 和 About 从 PostgreSQL 读取各自的欢迎词；Services 和 Contact 是简单 Vue 页面。所有页面由 Laravel 路由返回 Inertia 响应，前端使用 TypeScript，菜单通过 `<a>` 链接跳转。
 
 只有满足以下任一条件时，再切换或扩展为方法 3：
 
