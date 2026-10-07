@@ -12,10 +12,18 @@ export async function getWelcomeMessages(): Promise<WelcomeMessage[]> {
     return data.map(parseWelcomeMessage);
 }
 
-export async function getWelcomeMessage(page: PageName): Promise<WelcomeMessage> {
-    const body = await apiRequest(`/api/v1/welcome-messages/${page}`);
+export async function getWelcomeMessage(page: PageName, signal?: AbortSignal): Promise<WelcomeMessage> {
+    const body = await apiRequest(`/api/v1/welcome-messages/${page}`, {
+        cache: 'no-store',
+        signal,
+    });
+    const message = parseWelcomeMessage(getEnvelopeData(body));
 
-    return parseWelcomeMessage(getEnvelopeData(body));
+    if (message.page !== page) {
+        throw new TypeError(`The API returned content for ${message.page} instead of ${page}.`);
+    }
+
+    return message;
 }
 
 function getEnvelopeData(value: unknown): unknown {

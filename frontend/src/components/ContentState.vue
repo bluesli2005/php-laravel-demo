@@ -19,8 +19,8 @@ withDefaults(
         <div class="h-4 w-3/4 animate-pulse rounded bg-slate-200"></div>
     </div>
 
-    <div v-else-if="state === 'error'" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800" role="alert">
-        {{ errorMessage }}
+    <div v-else-if="state === 'error'" class="rounded-lg border border-red-200 bg-red-50 p-5 text-red-900" role="alert">
+        <slot name="error" :message="errorMessage">{{ errorMessage }}</slot>
     </div>
 
     <div v-else-if="state === 'empty'" class="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-slate-600" role="status">

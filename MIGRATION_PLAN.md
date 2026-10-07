@@ -227,7 +227,7 @@ frontend/.env.example
 
 ### 阶段 3：迁移四个页面并接入 API
 
-状态：未开始
+状态：已完成（2026-10-07，已提交 Git）
 
 目标：
 
@@ -380,8 +380,9 @@ resources/views/app.blade.php
 | 日期 | 阶段 | 阶段成果 | 验证结果 | 状态 |
 | --- | --- | --- | --- | --- |
 | 2026-10-07 | 阶段 0 | 已记录迁移决定并生成分阶段计划 | 已根据当前 Laravel/Inertia/Vue 结构核对范围 | 已完成 |
-| 2026-10-07 | 阶段 1 | 版本化 CRUD API、Resource、请求校验、四页非覆盖种子数据、本地/测试写入保护；按 AGENTS.md 安装 Boost | 60 项测试 / 307 个断言通过；TypeScript 和生产构建通过；本地 PostgreSQL 四页齐全且旧记录未变；四个 Inertia 页面及 API 实际 HTTP 检查通过 | 已完成，用户已通过继续阶段 2 确认；未提交 |
-| 2026-10-07 | 阶段 2 | 建立独立 Vue 3 + TypeScript + Vite + Tailwind CSS SPA，配置 Vue Router、类型化 API Client 和通用内容状态 | 独立前端 typecheck、生产构建通过；四路由直接访问均为 200；浏览器导航和刷新通过；控制台无警告或错误 | 已完成，待用户确认；未提交 |
+| 2026-10-07 | 阶段 1 | 版本化 CRUD API、Resource、请求校验、四页非覆盖种子数据、本地/测试写入保护；按 AGENTS.md 安装 Boost | 60 项测试 / 307 个断言通过；TypeScript 和生产构建通过；本地 PostgreSQL 四页齐全且旧记录未变；四个 Inertia 页面及 API 实际 HTTP 检查通过 | 已完成并提交：`83954be` |
+| 2026-10-07 | 阶段 2 | 建立独立 Vue 3 + TypeScript + Vite + Tailwind CSS SPA，配置 Vue Router、类型化 API Client 和通用内容状态 | 独立前端 typecheck、生产构建通过；四路由直接访问均为 200；浏览器导航和刷新通过；控制台无警告或错误 | 已完成并提交：`6383df6` |
+| 2026-10-07 | 阶段 3 | 将 Home、About、Services、Contact 页面迁移到独立 SPA，并分别接入 Laravel API | 四页真实 PostgreSQL 内容、客户端导航、直接刷新、API 失败和重试恢复均经浏览器验证；类型检查和生产构建通过 | 已完成，待用户确认；未提交 |
 
 每完成一个阶段，都要更新此表，记录实际交付内容、测试结果、未解决风险，以及用户确认提交后对应的提交记录。
 
@@ -420,4 +421,17 @@ resources/views/app.blade.php
 - `npm run typecheck` 通过；`npm run build` 通过，生成 `dist/index.html`、CSS 和 JavaScript 生产产物。
 - 开发服务器在 `127.0.0.1:15173` 临时启动；四个路由直接访问均返回 200，浏览器中从 About 切换到 Services 后 URL 和标题正确，刷新 Services 后仍正常显示，浏览器控制台无警告或错误。
 - 回归验证：Laravel 完整测试仍为 60 项 / 307 个断言通过；根目录现有 Inertia 前端的 TypeScript 检查和生产构建仍通过。根目录构建只有既有的可选 `fontaine` 字体回退优化提示，无构建错误。
-- 阶段 3 至 6 尚未执行；未进行 Git 提交。阶段 2 回滚时可单独删除 `frontend/`，不影响现有 Laravel/Inertia 应用。
+- 本记录完成时阶段 3 至 6 尚未执行。阶段 2 已在用户确认后提交为 `6383df6`；回滚时可单独撤销该提交，不影响现有 Laravel/Inertia 应用。
+
+### 阶段 3 实施记录（2026-10-07）
+
+- 新增共享 `WelcomeMessagePage` 组件，由四个 View 分别传入 `home`、`about`、`services`、`contact` 及对应英文标题；Home 保留原页面的 `Hello Laravel + Vue` 标题。
+- 四页在挂载时通过 Laravel `/api/v1/welcome-messages/{page}` 获取内容；请求禁用缓存，路由离开时取消未完成请求，重试时也会取消前一请求，避免过期响应覆盖当前状态。
+- API 层继续把响应当作 `unknown` 处理，验证 envelope、page 和 content 后才返回类型化数据，并额外确认响应 page 与请求 page 一致。
+- 页面提供加载骨架、404/空内容状态、API/网络/响应格式错误状态以及 `Try again` 恢复操作；未加入新增、修改或删除界面，CRUD UI 仍属于阶段 4。
+- 所有页面和状态文案保持英文；导航继续使用 Vue Router 的 `RouterLink`，独立前端未引入 Inertia 或 Laravel 专用前端依赖。
+- 真实数据验证：Home 显示 `Hello from PostgreSQL!`，About 显示数据库当前值 `Welcome to About!from PostgreSQL`，Services 和 Contact 显示各自数据库内容。未修改这些 PostgreSQL 记录。
+- 本地 CORS 当前按 Laravel 默认配置对 API 来源返回 `Access-Control-Allow-Origin: *`，因此独立前端可完成阶段 3 读取；按计划在阶段 5 收紧为配置过的前端来源。
+- 浏览器验证：四页客户端导航后 URL、标题和内容正确；直接刷新 Contact 后仍读取成功；关闭 Laravel 后显示明确 API 不可用提示与重试按钮，恢复 Laravel 后重试成功；恢复后浏览器控制台无错误。
+- 最终回归：独立前端 `npm run typecheck` 和 `npm run build` 通过；Laravel 60 项测试 / 307 个断言通过；根目录 Inertia 前端 TypeScript 检查和生产构建通过。根目录构建只有既有的可选 `fontaine` 提示。
+- 阶段 4 至 6 尚未执行；未进行 Git 提交。回滚时仍可继续把访问流量指向现有 Laravel/Inertia 前端。
