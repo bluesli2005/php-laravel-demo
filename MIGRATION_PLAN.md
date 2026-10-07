@@ -129,7 +129,7 @@ DELETE /api/v1/welcome-messages/{page}
 
 ## 7. 迁移阶段
 
-### 阶段 0：迁移规划和基准确认 （完成）
+### 阶段 0：迁移规划和基准确认
 
 状态：已完成
 
@@ -151,9 +151,9 @@ DELETE /api/v1/welcome-messages/{page}
 - 后续每个阶段都有独立验证方法。
 - 不删除现有应用代码。
 
-### 阶段 1：在保留 Inertia 的同时增加 Laravel API （完成）
+### 阶段 1：在保留 Inertia 的同时增加 Laravel API
 
-状态：已完成（2026-10-07，待用户确认；未提交 Git）
+状态：已完成（2026-10-07，已提交 Git）
 
 目标：
 
@@ -188,7 +188,7 @@ tests/Feature/Api/WelcomeMessageTest.php
 
 ### 阶段 2：建立独立 Vue 应用
 
-状态：未开始
+状态：已完成（2026-10-07，已提交 Git）
 
 目标：
 
@@ -380,7 +380,8 @@ resources/views/app.blade.php
 | 日期 | 阶段 | 阶段成果 | 验证结果 | 状态 |
 | --- | --- | --- | --- | --- |
 | 2026-10-07 | 阶段 0 | 已记录迁移决定并生成分阶段计划 | 已根据当前 Laravel/Inertia/Vue 结构核对范围 | 已完成 |
-| 2026-10-07 | 阶段 1 | 版本化 CRUD API、Resource、请求校验、四页非覆盖种子数据、本地/测试写入保护；按 AGENTS.md 安装 Boost | 60 项测试 / 307 个断言通过；TypeScript 和生产构建通过；本地 PostgreSQL 四页齐全且旧记录未变；四个 Inertia 页面及 API 实际 HTTP 检查通过 | 已完成，待用户确认；未提交 |
+| 2026-10-07 | 阶段 1 | 版本化 CRUD API、Resource、请求校验、四页非覆盖种子数据、本地/测试写入保护；按 AGENTS.md 安装 Boost | 60 项测试 / 307 个断言通过；TypeScript 和生产构建通过；本地 PostgreSQL 四页齐全且旧记录未变；四个 Inertia 页面及 API 实际 HTTP 检查通过 | 已完成，用户已通过继续阶段 2 确认；未提交 |
+| 2026-10-07 | 阶段 2 | 建立独立 Vue 3 + TypeScript + Vite + Tailwind CSS SPA，配置 Vue Router、类型化 API Client 和通用内容状态 | 独立前端 typecheck、生产构建通过；四路由直接访问均为 200；浏览器导航和刷新通过；控制台无警告或错误 | 已完成，待用户确认；未提交 |
 
 每完成一个阶段，都要更新此表，记录实际交付内容、测试结果、未解决风险，以及用户确认提交后对应的提交记录。
 
@@ -406,4 +407,17 @@ resources/views/app.blade.php
 - HTTP 验证：临时服务下四个旧页面、API 列表及四页详情均为 200，不支持的页面为 JSON 404；临时服务已停止。
 - 验证边界：完整 CRUD 自动化测试使用项目现有的内存 SQLite；PostgreSQL 验证覆盖种子数据及实际 HTTP 读取，未对用户真实数据进行更新/删除测试。未进行浏览器视觉验证。
 - 已知行为：删除 home/about 后原有 Inertia 页面会因原有 firstOrFail 返回 404，重新 POST 对应记录可恢复；删除后的前端体验按计划留到后续阶段处理。
-- 阶段 2 至 6 尚未执行；未进行 Git 提交。回滚 API 还应撤销 bootstrap 中的 API 注册，并移除新增写入保护中间件。
+- 本记录完成时阶段 2 至 6 尚未执行；未进行 Git 提交。回滚 API 还应撤销 bootstrap 中的 API 注册，并移除新增写入保护中间件。
+
+### 阶段 2 实施记录（2026-10-07）
+
+- 在 `frontend/` 中建立独立 Vue 3 + TypeScript + Vite 应用，使用自己的 `package.json`、`package-lock.json`、`tsconfig.json` 和 `vite.config.ts`，可以与 Laravel 根目录前端分别安装、启动和构建。
+- 使用 Vue Router 的 HTML5 history 模式配置 `/`、`/about`、`/services` 和 `/contact`，导航使用 `RouterLink`，路由切换不触发完整页面刷新，并为各路由设置独立页面标题。
+- 使用 Tailwind CSS v4 CSS-first 配置，新增响应式导航、页面壳和 `ContentState` 组件。该组件覆盖 loading、empty、error、ready 四种状态；阶段 2 的页面显示空数据占位，正式页面内容和 API 接入保留到阶段 3。
+- 新增类型化 API Client，后端地址通过 `VITE_API_BASE_URL` 配置，默认使用 `http://127.0.0.1:8000`；请求层统一处理网络、非 JSON、无效 JSON 和非成功响应，Welcome Message API 层在运行时校验响应 envelope、page 和 content，避免直接信任未知 JSON。
+- 独立前端未引用 Inertia、`laravel-vite-plugin` 或 Laravel 的 `resources/js`；根目录现有 Laravel/Inertia 前端未修改或删除。
+- `npm install` 安装 62 个包，审计结果为 0 个漏洞。
+- `npm run typecheck` 通过；`npm run build` 通过，生成 `dist/index.html`、CSS 和 JavaScript 生产产物。
+- 开发服务器在 `127.0.0.1:15173` 临时启动；四个路由直接访问均返回 200，浏览器中从 About 切换到 Services 后 URL 和标题正确，刷新 Services 后仍正常显示，浏览器控制台无警告或错误。
+- 回归验证：Laravel 完整测试仍为 60 项 / 307 个断言通过；根目录现有 Inertia 前端的 TypeScript 检查和生产构建仍通过。根目录构建只有既有的可选 `fontaine` 字体回退优化提示，无构建错误。
+- 阶段 3 至 6 尚未执行；未进行 Git 提交。阶段 2 回滚时可单独删除 `frontend/`，不影响现有 Laravel/Inertia 应用。
