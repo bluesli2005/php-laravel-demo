@@ -33,7 +33,7 @@ php-test/
     └── src/views/
 ```
 
-后端使用 Composer 安装和部署。前端使用 Node.js 22、npm 和 Vite 构建，产物为 `frontend/dist/`。
+后端使用 Composer 安装和部署。前端使用 Node.js 22.12+、npm 和 Vite 构建，产物为 `frontend/dist/`。
 
 ## API 边界
 

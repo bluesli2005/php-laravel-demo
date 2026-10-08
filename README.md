@@ -8,7 +8,7 @@
 - Composer 2.10
 - Laravel 13
 - PostgreSQL 18
-- Node.js 22 LTS
+- Node.js 22.12+（推荐使用 LTS）
 - Vue 3、TypeScript、Vite、Tailwind CSS
 
 ## 后端安装
@@ -49,7 +49,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 cd /Users/wenbiaoli/develop/php-test/frontend
 nvm install
 nvm use
-node --version # 必须为 v22.x
+node --version # 必须为 v22.12+
 npm ci
 cp .env.example .env
 npm run dev
@@ -62,7 +62,7 @@ VITE_API_BASE_URL=http://127.0.0.1:8000
 VITE_WRITES_ENABLED=true
 ```
 
-访问 <http://localhost:5173>。`frontend/.npmrc` 会拒绝 Node.js 22 之外的主版本。
+访问 <http://localhost:5173>。`frontend/.nvmrc` 以 Node.js 22 LTS 作为默认开发版本，但 `package.json` 允许 Node.js 22.12 及以上版本。
 
 ## 测试
 
@@ -115,7 +115,7 @@ APP_URL=https://api.example.com
 FRONTEND_URL=https://www.example.com
 ```
 
-Vue SPA 使用 Node.js 22 构建：
+Vue SPA 使用 Node.js 22.12+ 构建：
 
 ```bash
 cd frontend
