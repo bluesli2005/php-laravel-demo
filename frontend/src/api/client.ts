@@ -1,6 +1,9 @@
 const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 
 export const apiBaseUrl = (configuredBaseUrl || 'http://127.0.0.1:8000').replace(/\/$/, '');
+export const apiWritesEnabled =
+    import.meta.env.VITE_WRITES_ENABLED === 'true' ||
+    (import.meta.env.VITE_WRITES_ENABLED === undefined && import.meta.env.DEV);
 
 interface ApiErrorBody {
     message?: unknown;

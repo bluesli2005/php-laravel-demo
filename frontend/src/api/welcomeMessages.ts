@@ -26,6 +26,63 @@ export async function getWelcomeMessage(page: PageName, signal?: AbortSignal): P
     return message;
 }
 
+export async function createWelcomeMessage(
+    page: PageName,
+    content: string,
+    signal?: AbortSignal,
+): Promise<WelcomeMessage> {
+    return requestWelcomeMessage(
+        '/api/v1/welcome-messages',
+        page,
+        {
+            method: 'POST',
+            body: JSON.stringify({ page, content }),
+            signal,
+        },
+    );
+}
+
+export async function updateWelcomeMessage(
+    page: PageName,
+    content: string,
+    signal?: AbortSignal,
+): Promise<WelcomeMessage> {
+    return requestWelcomeMessage(
+        `/api/v1/welcome-messages/${page}`,
+        page,
+        {
+            method: 'PATCH',
+            body: JSON.stringify({ content }),
+            signal,
+        },
+    );
+}
+
+export async function deleteWelcomeMessage(page: PageName, signal?: AbortSignal): Promise<WelcomeMessage> {
+    return requestWelcomeMessage(
+        `/api/v1/welcome-messages/${page}`,
+        page,
+        {
+            method: 'DELETE',
+            signal,
+        },
+    );
+}
+
+async function requestWelcomeMessage(
+    path: string,
+    expectedPage: PageName,
+    init: RequestInit,
+): Promise<WelcomeMessage> {
+    const message = parseWelcomeMessage(getEnvelopeData(await apiRequest(path, init)));
+
+    if (message.page !== expectedPage) {
+        throw new TypeError(`The API returned content for ${message.page} instead of ${expectedPage}.`);
+    }
+
+    return message;
+}
+
 function getEnvelopeData(value: unknown): unknown {
     if (!isRecord(value) || !Object.hasOwn(value, 'data')) {
         throw new TypeError('The API response does not contain a data field.');

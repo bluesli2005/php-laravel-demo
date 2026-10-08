@@ -1,4 +1,5 @@
 export const pageNames = ['home', 'about', 'services', 'contact'] as const;
+export const welcomeMessageContentMaxLength = 255;
 
 export type PageName = (typeof pageNames)[number];
 

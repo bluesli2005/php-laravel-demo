@@ -248,7 +248,7 @@ frontend/.env.example
 
 ### 阶段 4：接入新增、查询、修改和删除功能
 
-状态：未开始
+状态：已完成（2026-10-08，待用户确认）
 
 目标：
 
@@ -276,6 +276,8 @@ frontend/.env.example
 - 配置 CORS 和各环境的 API 地址。
 - 定义独立的构建与部署产物。
 - 记录开发、测试和生产环境变量。
+- 将独立前端的开发、CI 和部署运行时统一为 Node.js 22 LTS，避免本机 Node.js 23 与 Vitest 4 的 engine 不兼容提示。
+- 使用 `.nvmrc` 和 `package.json` 的 `engines` 约束 Node.js 版本，并在 README 中记录版本切换和依赖安装命令。
 
 预期本地启动命令：
 
@@ -295,6 +297,8 @@ npm run dev
 - 后端部署不需要构建 Vue SPA。
 - CORS 只允许配置过的前端来源。
 - README 包含前后端分别安装、启动和部署的说明。
+- Node.js 22 LTS 环境下执行 `npm ci`、`npm test`、`npm run typecheck` 和 `npm run build` 均成功，且不再出现 `EBADENGINE` 警告。
+- 本地开发、CI 和生产构建读取同一份 Node.js 版本约束。
 
 回滚方法：部署配置修复前，继续把用户访问指向现有 Laravel/Inertia 应用。
 
@@ -367,13 +371,18 @@ resources/views/app.blade.php
 
 这些内容应在 API 和 SPA 边界稳定之后，作为独立任务处理。
 
-## 10. 开发前仍需确认的问题
+## 10. 已确认决定与后续问题
 
-1. CRUD 是否需要在四个页面中提供可见的编辑表单，还是只提供 CRUD API，而页面保持只读？
-2. 加入认证之前，生产环境是否禁用写入接口，还是在基础设施层临时保护？
-3. 生产环境计划使用什么前端和后端地址，例如 `www.example.com` 和 `api.example.com`？
-4. 删除页面数据后，前端应该显示未找到、显示默认文字，还是提供立即重新创建功能？
-5. 是否需要现在生成 OpenAPI 等 API 文档，还是以后再处理？
+已确认：
+
+1. 四个页面均提供可见的新增、编辑和删除界面。
+2. 应用认证完成前，生产环境禁用写入接口；前端生产构建默认隐藏写入控件，Laravel 后端继续返回 JSON 403，形成双重保护。
+3. 删除页面数据后显示空状态，并提供立即重新创建功能。
+
+后续仍需确认：
+
+1. 生产环境计划使用什么前端和后端地址，例如 `www.example.com` 和 `api.example.com`？
+2. 是否需要现在生成 OpenAPI 等 API 文档，还是以后再处理？
 
 ## 11. 进度记录
 
@@ -382,7 +391,8 @@ resources/views/app.blade.php
 | 2026-10-07 | 阶段 0 | 已记录迁移决定并生成分阶段计划 | 已根据当前 Laravel/Inertia/Vue 结构核对范围 | 已完成 |
 | 2026-10-07 | 阶段 1 | 版本化 CRUD API、Resource、请求校验、四页非覆盖种子数据、本地/测试写入保护；按 AGENTS.md 安装 Boost | 60 项测试 / 307 个断言通过；TypeScript 和生产构建通过；本地 PostgreSQL 四页齐全且旧记录未变；四个 Inertia 页面及 API 实际 HTTP 检查通过 | 已完成并提交：`83954be` |
 | 2026-10-07 | 阶段 2 | 建立独立 Vue 3 + TypeScript + Vite + Tailwind CSS SPA，配置 Vue Router、类型化 API Client 和通用内容状态 | 独立前端 typecheck、生产构建通过；四路由直接访问均为 200；浏览器导航和刷新通过；控制台无警告或错误 | 已完成并提交：`6383df6` |
-| 2026-10-07 | 阶段 3 | 将 Home、About、Services、Contact 页面迁移到独立 SPA，并分别接入 Laravel API | 四页真实 PostgreSQL 内容、客户端导航、直接刷新、API 失败和重试恢复均经浏览器验证；类型检查和生产构建通过 | 已完成，待用户确认；未提交 |
+| 2026-10-07 | 阶段 3 | 将 Home、About、Services、Contact 页面迁移到独立 SPA，并分别接入 Laravel API | 四页真实 PostgreSQL 内容、客户端导航、直接刷新、API 失败和重试恢复均经浏览器验证；类型检查和生产构建通过 | 已完成并提交：`5e03807` |
+| 2026-10-08 | 阶段 4 | 四页可见 CRUD、前后端校验、删除确认及立即重建、生产环境写入双重保护 | 前端 15 项测试通过；独立前端 typecheck/构建、Laravel 60 项测试/307 个断言及旧前端构建通过；使用临时 SQLite 完成浏览器 CRUD 验证，生产模式写入返回 403 且不显示写入控件 | 已完成，待用户确认；未提交 |
 
 每完成一个阶段，都要更新此表，记录实际交付内容、测试结果、未解决风险，以及用户确认提交后对应的提交记录。
 
@@ -434,4 +444,17 @@ resources/views/app.blade.php
 - 本地 CORS 当前按 Laravel 默认配置对 API 来源返回 `Access-Control-Allow-Origin: *`，因此独立前端可完成阶段 3 读取；按计划在阶段 5 收紧为配置过的前端来源。
 - 浏览器验证：四页客户端导航后 URL、标题和内容正确；直接刷新 Contact 后仍读取成功；关闭 Laravel 后显示明确 API 不可用提示与重试按钮，恢复 Laravel 后重试成功；恢复后浏览器控制台无错误。
 - 最终回归：独立前端 `npm run typecheck` 和 `npm run build` 通过；Laravel 60 项测试 / 307 个断言通过；根目录 Inertia 前端 TypeScript 检查和生产构建通过。根目录构建只有既有的可选 `fontaine` 提示。
-- 阶段 4 至 6 尚未执行；未进行 Git 提交。回滚时仍可继续把访问流量指向现有 Laravel/Inertia 前端。
+- 阶段 3 已在用户确认后提交为 `5e03807`；阶段 4 至 6 在本记录完成时尚未执行。回滚时仍可继续把访问流量指向现有 Laravel/Inertia 前端。
+
+### 阶段 4 实施记录（2026-10-08）
+
+- 独立 SPA 的四个页面均接入新增、查询、修改和删除操作。已有内容显示 `Edit content` 和 `Delete content`；缺少记录时显示空状态和 `Create content`，删除成功后可立即重新创建。
+- 编辑和新增共用可见表单。前端拒绝空白内容和超过 255 个字符的内容，显示字符计数；Laravel 请求校验继续作为后端边界，422 字段错误会显示在对应输入框下方。
+- API Client 新增 POST、PATCH 和 DELETE 方法，继续验证响应 envelope、page 和 content；写入期间禁用重复操作，并取消过期请求，成功后直接更新当前页面状态，无需完整刷新。
+- 删除采用两步界面确认：首次点击仅显示确认区域，只有再次点击 `Delete permanently` 才发送 DELETE；也可取消并恢复正常页面。
+- 临时安全策略已经落实：开发模式默认允许写入，生产构建默认隐藏所有写入控件；只有显式设置 `VITE_WRITES_ENABLED=true` 才显示。Laravel 的本地/测试写入中间件仍会在其他环境返回 JSON 403，前端也会显示明确的禁用提示。
+- 新增 Vitest、Vue Test Utils 和 jsdom，覆盖加载、查询、创建、修改、删除确认、空白/超长输入、后端 422、生产 403、响应校验和只读模式，共 2 个测试文件、15 项测试。
+- 浏览器端到端验证使用一次性 SQLite 数据库和临时端口：删除 Contact 后显示空状态，重新创建成功，空白修改被前端拒绝，正常修改立即显示新内容且未刷新页面；生产后端的 PATCH 返回 403，生产前端不显示编辑或删除控件。临时服务和数据库文件均已清理，真实 PostgreSQL 未被修改。
+- 最终回归：独立前端 `npm test` 为 15 项通过，`npm run typecheck` 和默认生产构建通过；Laravel 为 60 项测试 / 307 个断言通过；根目录 Inertia 前端的 TypeScript 检查和生产构建通过。根目录构建只有既有的可选 `fontaine` 提示，`git diff --check` 通过。
+- 依赖安装生成锁文件后，标准 `npm ci --dry-run` 可通过，审计结果为 0 个漏洞。本机 Node.js 23 不在 Vitest 4 支持的 engine 范围内，当前测试仍通过；阶段 5 已计划把本地开发、CI 和生产构建版本统一固定为 Node.js 22 LTS。
+- 阶段 5 和阶段 6 尚未执行；本阶段尚未进行 Git 提交。回滚时可移除前端写入方法、CRUD 组件状态和测试，并继续使用阶段 3 的只读 SPA。
