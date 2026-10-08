@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContentState } from '../types/welcomeMessage';
+import type { ContentState } from '../types/ui';
 
 withDefaults(
     defineProps<{

@@ -3,9 +3,7 @@ import { RouterLink } from 'vue-router';
 
 const menuItems = [
     { label: 'Home', to: '/' },
-    { label: 'About', to: '/about' },
-    { label: 'Services', to: '/services' },
-    { label: 'Contact', to: '/contact' },
+    { label: '保单管理', to: '/policies' },
 ] as const;
 </script>
 

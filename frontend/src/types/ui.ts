@@ -1,0 +1,1 @@
+export type ContentState = 'loading' | 'empty' | 'error' | 'ready';
