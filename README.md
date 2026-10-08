@@ -86,12 +86,12 @@ npm run build
 ## API
 
 ```text
-GET    /api/v1/welcome-messages
-POST   /api/v1/welcome-messages
-GET    /api/v1/welcome-messages/{page}
-PUT    /api/v1/welcome-messages/{page}
-PATCH  /api/v1/welcome-messages/{page}
-DELETE /api/v1/welcome-messages/{page}
+GET    /api/v1/life-insurance-policies
+POST   /api/v1/life-insurance-policies
+GET    /api/v1/life-insurance-policies/{life_insurance_policy}
+PUT    /api/v1/life-insurance-policies/{life_insurance_policy}
+PATCH  /api/v1/life-insurance-policies/{life_insurance_policy}
+DELETE /api/v1/life-insurance-policies/{life_insurance_policy}
 ```
 
 `page` 仅支持 `home`、`about`、`services`、`contact`。未加入认证前，写请求只允许 `local` 和 `testing` 环境；生产环境返回 403。

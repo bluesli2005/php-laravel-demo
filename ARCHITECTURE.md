@@ -41,7 +41,6 @@ php-test/
 - Controller 协调请求和模型。
 - Form Request 校验 JSON 输入。
 - API Resource 固定响应字段。
-- `WelcomeMessage` 只允许 `home`、`about`、`services`、`contact`。
 - PostgreSQL 只允许 Laravel 访问。
 
 成功响应：
