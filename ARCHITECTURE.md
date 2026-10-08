@@ -90,7 +90,7 @@ DELETE /api/v1/life-insurance-policies/{life_insurance_policy}
 GET /api/v1/life-insurance-policies?search=张三&status=active
 ```
 
-`search` 查询保单号、投保人、被保险人、受益人和备注；`status` 按保单状态筛选。列表默认按创建时间倒序，不分页。
+`search` 查询保单号、投保人、被保险人、受益人和备注；`status` 按保单状态筛选。列表默认按创建时间倒序，`per_page` 仅允许 10、20、30、50；响应包含 Laravel paginator 的 `meta` 和 `links`。
 
 ### 3.4 数据模型
 
@@ -106,7 +106,7 @@ GET /api/v1/life-insurance-policies?search=张三&status=active
 - 受益人和备注：可为空
 - 删除：硬删除，不使用软删除
 
-`DatabaseSeeder` 使用 `firstOrCreate` 写入 3 条可重复执行的示例保单。
+`DatabaseSeeder` 使用 `firstOrCreate` 写入 120 条可重复执行的示例保单。
 
 ## 4. 前端架构
 

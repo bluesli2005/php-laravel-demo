@@ -8,12 +8,21 @@ import type {
 export interface LifeInsurancePolicyFilters {
     search?: string;
     status?: PolicyStatus | '';
+    page?: number;
+    perPage?: number;
+}
+
+export interface LifeInsurancePolicyPage {
+    policies: LifeInsurancePolicy[];
+    currentPage: number;
+    lastPage: number;
+    total: number;
 }
 
 export async function getLifeInsurancePolicies(
     filters: LifeInsurancePolicyFilters = {},
     signal?: AbortSignal,
-): Promise<LifeInsurancePolicy[]> {
+): Promise<LifeInsurancePolicyPage> {
     const params = new URLSearchParams();
 
     if (filters.search?.trim() !== '') {
@@ -24,17 +33,38 @@ export async function getLifeInsurancePolicies(
         params.set('status', filters.status);
     }
 
+    if (filters.page !== undefined) {
+        params.set('page', String(filters.page));
+    }
+
+    if (filters.perPage !== undefined) {
+        params.set('per_page', String(filters.perPage));
+    }
+
     const query = params.toString();
-    const data = getEnvelopeData(await apiRequest(`/api/v1/life-insurance-policies${query ? `?${query}` : ''}`, {
+    return parsePolicyPage(await apiRequest(`/api/v1/life-insurance-policies${query ? `?${query}` : ''}`, {
         cache: 'no-store',
         signal,
     }));
+}
 
-    if (!Array.isArray(data)) {
-        throw new TypeError('The policy list has an invalid data field.');
+function parsePolicyPage(value: unknown): LifeInsurancePolicyPage {
+    if (!isRecord(value) || !Array.isArray(value.data) || !isRecord(value.meta)) {
+        throw new TypeError('The policy list has an invalid response format.');
     }
 
-    return data.map(parsePolicy);
+    const { current_page: currentPage, last_page: lastPage, total } = value.meta;
+
+    if (typeof currentPage !== 'number' || typeof lastPage !== 'number' || typeof total !== 'number') {
+        throw new TypeError('The policy list has invalid pagination data.');
+    }
+
+    return {
+        policies: value.data.map(parsePolicy),
+        currentPage,
+        lastPage,
+        total,
+    };
 }
 
 export async function getLifeInsurancePolicy(id: number, signal?: AbortSignal): Promise<LifeInsurancePolicy> {

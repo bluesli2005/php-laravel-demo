@@ -64,5 +64,27 @@ class DatabaseSeeder extends Seeder
                 $policy,
             );
         }
+
+        foreach (range(4, 120) as $number) {
+            $status = LifeInsurancePolicy::STATUSES[($number - 4) % count(LifeInsurancePolicy::STATUSES)];
+            $effectiveYear = 2021 + ($number % 6);
+
+            LifeInsurancePolicy::query()->firstOrCreate(
+                ['policy_number' => sprintf('POL-%04d', $number)],
+                [
+                    'policyholder_name' => "示例投保人{$number}",
+                    'insured_name' => "示例被保险人{$number}",
+                    'insured_birth_date' => sprintf('%d-%02d-%02d', 1965 + ($number % 35), ($number % 12) + 1, ($number % 27) + 1),
+                    'beneficiary_name' => $number % 3 === 0 ? null : "示例受益人{$number}",
+                    'coverage_amount' => 100000 + ($number * 10000),
+                    'premium_amount' => 2000 + ($number * 100),
+                    'currency' => 'CNY',
+                    'status' => $status,
+                    'effective_date' => sprintf('%d-%02d-01', $effectiveYear, ($number % 12) + 1),
+                    'expiry_date' => sprintf('%d-%02d-01', $effectiveYear + 20, ($number % 12) + 1),
+                    'notes' => "示例保单{$number}",
+                ],
+            );
+        }
     }
 }

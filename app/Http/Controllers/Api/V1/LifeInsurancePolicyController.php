@@ -33,7 +33,7 @@ class LifeInsurancePolicyController extends Controller
             });
 
         return LifeInsurancePolicyResource::collection(
-            $query->latest()->get()
+            $query->latest()->paginate($validated['per_page'] ?? 10)->withQueryString()
         );
     }
 

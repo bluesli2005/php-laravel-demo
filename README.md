@@ -245,7 +245,7 @@ DELETE /api/v1/life-insurance-policies/{life_insurance_policy}
 GET /api/v1/life-insurance-policies?search=张三&status=active
 ```
 
-`search` 用于搜索保单号、投保人、被保险人、受益人和备注；`status` 用于按保险状态筛选。
+`search` 用于搜索保单号、投保人、被保险人、受益人和备注；`status` 用于按保险状态筛选；`per_page` 只允许 `10`、`20`、`30`、`50`，默认 `10`。
 
 未加入认证前，写请求只允许在 `local` 和 `testing` 环境使用；生产环境返回 403。
 

@@ -82,8 +82,9 @@ class LifeInsurancePolicyTest extends TestCase
         $this->seed();
         $this->seed();
 
-        $this->assertDatabaseCount('life_insurance_policies', 3);
+        $this->assertDatabaseCount('life_insurance_policies', 120);
         $this->assertDatabaseHas('life_insurance_policies', ['policy_number' => 'POL-0001']);
+        $this->assertDatabaseHas('life_insurance_policies', ['policy_number' => 'POL-0120']);
     }
 
     public function test_list_can_filter_by_search_and_status(): void
@@ -95,9 +96,30 @@ class LifeInsurancePolicyTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.policy_number', 'POL-0001');
 
-        $this->getJson('/api/v1/life-insurance-policies?status=cancelled')
+        $this->getJson('/api/v1/life-insurance-policies?search=不存在&status=cancelled')
             ->assertOk()
             ->assertJsonCount(0, 'data');
+    }
+
+    public function test_list_is_paginated(): void
+    {
+        LifeInsurancePolicy::factory()->count(25)->create();
+
+        $this->getJson('/api/v1/life-insurance-policies?page=2')
+            ->assertOk()
+            ->assertJsonCount(10, 'data')
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonPath('meta.last_page', 3)
+            ->assertJsonPath('meta.per_page', 10)
+            ->assertJsonPath('meta.total', 25);
+
+        $this->getJson('/api/v1/life-insurance-policies?page=2&per_page=20')
+            ->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonPath('meta.last_page', 2)
+            ->assertJsonPath('meta.per_page', 20)
+            ->assertJsonPath('meta.total', 25);
     }
 
     public function test_invalid_status_filter_returns_422(): void

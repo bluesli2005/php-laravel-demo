@@ -3,7 +3,9 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { ApiError } from '../api/client';
 import { getLifeInsurancePolicies } from '../api/lifeInsurancePolicies';
+import BaseButton from '../components/BaseButton.vue';
 import BaseTable, { type TableColumn } from '../components/BaseTable.vue';
+import BaseSelect from '../components/BaseSelect.vue';
 import ContentStateDisplay from '../components/ContentState.vue';
 import PolicySearchBox from '../components/PolicySearchBox.vue';
 import PolicyStatusSelect from '../components/PolicyStatusSelect.vue';
@@ -14,6 +16,10 @@ const policies = ref<LifeInsurancePolicy[]>([]);
 const searchQuery = ref('');
 const statusFilter = ref<PolicyStatus | ''>('');
 const errorMessage = ref('');
+const currentPage = ref(1);
+const lastPage = ref(1);
+const totalPolicies = ref(0);
+const perPage = ref('10');
 let request: AbortController | null = null;
 
 const columns: readonly TableColumn[] = [
@@ -25,21 +31,33 @@ const columns: readonly TableColumn[] = [
     { key: 'effective_date', label: '生效日' },
     { key: 'actions', label: '操作' },
 ];
+const perPageOptions = [
+    { value: '10', label: '10 条' },
+    { value: '20', label: '20 条' },
+    { value: '30', label: '30 条' },
+    { value: '50', label: '50 条' },
+];
 
 onMounted(loadPolicies);
 onBeforeUnmount(() => request?.abort());
 
-async function loadPolicies(): Promise<void> {
+async function loadPolicies(page = 1): Promise<void> {
     request?.abort();
     request = new AbortController();
     state.value = 'loading';
     errorMessage.value = '';
 
     try {
-        policies.value = await getLifeInsurancePolicies({
+        const result = await getLifeInsurancePolicies({
             search: searchQuery.value,
             status: statusFilter.value,
+            page,
+            perPage: Number(perPage.value),
         }, request.signal);
+        policies.value = result.policies;
+        currentPage.value = result.currentPage;
+        lastPage.value = result.lastPage;
+        totalPolicies.value = result.total;
         state.value = policies.value.length === 0 ? 'empty' : 'ready';
     } catch (error) {
         if (request.signal.aborted) return;
@@ -53,7 +71,22 @@ async function loadPolicies(): Promise<void> {
 function resetSearch(): void {
     searchQuery.value = '';
     statusFilter.value = '';
-    loadPolicies();
+    loadFirstPage();
+}
+
+function loadFirstPage(): void {
+    void loadPolicies();
+}
+
+function changePage(page: number): void {
+    if (page >= 1 && page <= lastPage.value && page !== currentPage.value) {
+        loadPolicies(page);
+    }
+}
+
+function changePerPage(value: string): void {
+    perPage.value = value;
+    loadFirstPage();
 }
 
 function getPolicyId(row: object): number {
@@ -92,9 +125,13 @@ function policyStatusClass(value: unknown): string {
             <RouterLink class="button-primary" to="/policies/create">新建保单</RouterLink>
         </div>
 
-        <form class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[1fr_12rem_auto_auto] sm:items-end" @submit.prevent="loadPolicies">
+        <form class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[1fr_12rem_8rem_auto_auto] sm:items-end" @submit.prevent="loadFirstPage">
             <PolicySearchBox v-model="searchQuery" />
             <PolicyStatusSelect v-model="statusFilter" />
+            <label class="grid gap-2 text-sm font-semibold text-slate-700" for="policy-per-page">
+                每页显示
+                <BaseSelect id="policy-per-page" :model-value="perPage" :options="perPageOptions" @update:model-value="changePerPage" />
+            </label>
             <button class="button-primary" type="submit">搜索</button>
             <button class="button-secondary" type="button" @click="resetSearch">重置</button>
         </form>
@@ -107,22 +144,32 @@ function policyStatusClass(value: unknown): string {
                 </div>
             </template>
             <template #error>
-                <button class="button-secondary" type="button" @click="loadPolicies">重新加载</button>
+                <button class="button-secondary" type="button" @click="loadFirstPage">重新加载</button>
             </template>
-            <BaseTable v-if="policies.length > 0" :columns="columns" :rows="policies" row-key="id">
-                <template #cell-policy_number="{ value, row }">
-                    <RouterLink class="font-semibold text-sky-700" :to="`/policies/${getPolicyId(row)}`">{{ value }}</RouterLink>
-                </template>
-                <template #cell-coverage_amount="{ row }">
-                    {{ formatPolicyAmount(row) }}
-                </template>
-                <template #cell-status="{ value }">
-                    <span :class="['rounded-full px-2 py-1 text-xs font-semibold', policyStatusClass(value)]">{{ getPolicyStatus(value) }}</span>
-                </template>
-                <template #cell-actions="{ row }">
-                    <RouterLink class="text-sky-700 hover:underline" :to="`/policies/${getPolicyId(row)}`">查看</RouterLink>
-                </template>
-            </BaseTable>
+            <div v-if="policies.length > 0" class="grid gap-4">
+                <BaseTable :columns="columns" :rows="policies" row-key="id">
+                    <template #cell-policy_number="{ value, row }">
+                        <RouterLink class="font-semibold text-sky-700" :to="`/policies/${getPolicyId(row)}`">{{ value }}</RouterLink>
+                    </template>
+                    <template #cell-coverage_amount="{ row }">
+                        {{ formatPolicyAmount(row) }}
+                    </template>
+                    <template #cell-status="{ value }">
+                        <span :class="['rounded-full px-2 py-1 text-xs font-semibold', policyStatusClass(value)]">{{ getPolicyStatus(value) }}</span>
+                    </template>
+                    <template #cell-actions="{ row }">
+                        <RouterLink class="text-sky-700 hover:underline" :to="`/policies/${getPolicyId(row)}`">查看</RouterLink>
+                    </template>
+                </BaseTable>
+
+                <nav v-if="lastPage > 1" aria-label="保单列表分页" class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-slate-600">第 {{ currentPage }} / {{ lastPage }} 页，共 {{ totalPolicies }} 条</p>
+                    <div class="flex gap-2">
+                        <BaseButton :disabled="currentPage === 1" variant="secondary" @click="changePage(currentPage - 1)">上一页</BaseButton>
+                        <BaseButton :disabled="currentPage === lastPage" variant="secondary" @click="changePage(currentPage + 1)">下一页</BaseButton>
+                    </div>
+                </nav>
+            </div>
         </ContentStateDisplay>
     </section>
 </template>

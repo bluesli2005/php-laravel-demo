@@ -19,6 +19,8 @@ class IndexLifeInsurancePolicyRequest extends FormRequest
         return [
             'search' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'string', Rule::in(LifeInsurancePolicy::STATUSES)],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', Rule::in([10, 20, 30, 50])],
         ];
     }
 }
