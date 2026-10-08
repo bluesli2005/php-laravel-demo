@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\LifeInsurancePolicyController;
 use App\Http\Controllers\Api\V1\WelcomeMessageController;
 use App\Http\Middleware\EnsureLocalApiWrites;
 use App\Models\WelcomeMessage;
@@ -10,4 +11,5 @@ Route::prefix('v1')->name('api.v1.')->middleware(EnsureLocalApiWrites::class)->g
         ->parameters(['welcome-messages' => 'page'])
         ->scoped(['page' => 'page'])
         ->where(['page' => implode('|', WelcomeMessage::PAGES)]);
+    Route::apiResource('life-insurance-policies', LifeInsurancePolicyController::class);
 });
