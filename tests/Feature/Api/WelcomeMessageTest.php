@@ -233,4 +233,23 @@ class WelcomeMessageTest extends TestCase
         $this->get('/api/v1/welcome-messages/home')->assertOk()
             ->assertExactJson(['data' => ['page' => 'home', 'content' => 'Hello from PostgreSQL!']]);
     }
+
+    public function test_cors_allows_only_the_configured_frontend_origin(): void
+    {
+        config()->set('cors.allowed_origins', ['https://frontend.example.test']);
+
+        $this->withHeaders([
+            'Origin' => 'https://frontend.example.test',
+            'Access-Control-Request-Method' => 'GET',
+        ])->options('/api/v1/welcome-messages/home')
+            ->assertNoContent()
+            ->assertHeader('Access-Control-Allow-Origin', 'https://frontend.example.test');
+
+        $this->withHeaders([
+            'Origin' => 'https://other.example.test',
+            'Access-Control-Request-Method' => 'GET',
+        ])->options('/api/v1/welcome-messages/home')
+            ->assertNoContent()
+            ->assertHeader('Access-Control-Allow-Origin', 'https://frontend.example.test');
+    }
 }

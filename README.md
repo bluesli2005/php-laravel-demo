@@ -1,12 +1,12 @@
 # php-test
 
-使用 Laravel、Inertia、Vue、TypeScript 和 PostgreSQL 的本地示例。首页有四项菜单，分别连接 Home、About、Services、Contact Vue 页面；Home 和 About 显示 `welcome_messages` 表中对应的欢迎词。
+项目正在从 Laravel + Inertia 迁移为独立部署的 Laravel JSON API 和 Vue 3 SPA。独立前端位于 `frontend/`；旧 Inertia 前端保留到 Step 6，作为回滚入口。
 
 ## 当前环境
 
 - PHP 8.5
 - Composer 2.10
-- Node.js、npm
+- Node.js 22 LTS、npm
 - Laravel 13
 - Inertia 3、Vue 3、TypeScript
 - PostgreSQL 18
@@ -14,10 +14,116 @@
 - 数据库用户：`php_test`
 - 本地地址：<http://127.0.0.1:8000>
 
-## 首次安装环境
+## 独立前后端启动
+
+后端首次安装：
 
 ```bash
-brew install php composer node postgresql@18
+cd /Users/wenbiaoli/develop/php-test
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+```
+
+已有 `.env` 时不要覆盖。确认以下地址与实际端口一致：
+
+```dotenv
+APP_URL=http://127.0.0.1:8000
+FRONTEND_URL=http://localhost:5173
+```
+
+启动后端：
+
+```bash
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+另开终端安装并启动独立前端：
+
+```bash
+cd /Users/wenbiaoli/develop/php-test/frontend
+nvm install
+nvm use
+node --version # 必须为 v22.x
+npm ci
+cp .env.example .env
+npm run dev
+```
+
+未使用 nvm 时，使用其他 Node.js 版本管理器读取 `frontend/.nvmrc`。macOS Homebrew 用户可把 `/opt/homebrew/opt/node@22/bin` 放在 `PATH` 最前面。`frontend/.npmrc` 会拒绝其他 Node.js 主版本。
+
+访问 <http://localhost:5173>。前端通过 `VITE_API_BASE_URL` 请求 Laravel API。
+
+本地前端环境变量：
+
+```dotenv
+VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_WRITES_ENABLED=true
+```
+
+`FRONTEND_URL` 是 Laravel 唯一允许的浏览器跨域来源。修改后运行 `php artisan config:clear`。
+
+## 独立测试和构建
+
+后端不需要 Node.js：
+
+```bash
+composer install
+php artisan test --compact
+```
+
+前端不需要 PHP：
+
+```bash
+cd frontend
+nvm use
+npm ci
+npm test
+npm run typecheck
+npm run build
+```
+
+前端产物位于 `frontend/dist/`。
+
+## 独立部署
+
+Laravel API 部署只需要项目 PHP 文件、Composer 依赖和数据库。部署时设置：
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.example.com
+FRONTEND_URL=https://www.example.com
+```
+
+然后执行：
+
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize
+```
+
+生产环境写请求仍会返回 403，直到后续加入认证。
+
+Vue SPA 使用 Node.js 22 LTS 独立构建：
+
+```bash
+cd frontend
+nvm use
+npm ci
+VITE_API_BASE_URL=https://api.example.com VITE_WRITES_ENABLED=false npm run build
+```
+
+只部署 `frontend/dist/` 到静态站点。站点必须把未知路径回退到 `index.html`，供 Vue Router 处理。
+
+生产前端不需要 PHP，生产 API 不需要执行任何 `npm` 命令。CI 应读取 `frontend/.nvmrc`。
+
+## macOS 基础环境
+
+```bash
+brew install php composer node@22 postgresql@18
 brew services start postgresql@18
 ```
 
@@ -43,7 +149,7 @@ brew services list
 
 当前 Homebrew PostgreSQL 仅用于本机开发，本地连接采用可信认证，因此 `.env` 中的 `DB_PASSWORD` 为空。
 
-## 首次初始化项目
+## 旧 Inertia 前端初始化（Step 6 前保留）
 
 ```bash
 cd /Users/wenbiaoli/develop/php-test
@@ -75,7 +181,7 @@ php artisan key:generate
 
 如果修改 `.env` 后应用仍使用旧配置，可以运行 `php artisan config:clear`。
 
-## 日常启动
+## 旧 Inertia 前端启动（Step 6 前保留）
 
 先确保 PostgreSQL 已启动：
 
@@ -146,7 +252,7 @@ php artisan serve --host=127.0.0.1 --port=8001
 
 PHP 内置开发服务器仅用于本地开发，不应直接用于生产环境。
 
-## Windows 11 首次构建与启动（CMD）
+## Windows 11 旧 Inertia 前端构建与启动（Step 6 前保留）
 
 下面的命令在 **Windows 命令提示符（CMD）** 中执行。以复制到 `C:\Users\Acer\Desktop\10月新现场\Project-laravel\_demo\php-laravel-demo` 的项目为例；如果实际目录不同，请替换路径。首次准备需要安装 PHP（满足 `composer.json` 中的 `^8.3` 要求）、Composer、Node.js（含 npm）和 PostgreSQL，并确保命令在新打开的 CMD 中可用：
 

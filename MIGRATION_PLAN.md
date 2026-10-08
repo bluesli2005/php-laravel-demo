@@ -268,7 +268,7 @@ frontend/.env.example
 
 ### 阶段 5：实现独立启动和独立部署
 
-状态：未开始
+状态：已完成（2026-10-08，待用户确认）
 
 目标：
 
@@ -393,6 +393,7 @@ resources/views/app.blade.php
 | 2026-10-07 | 阶段 2 | 建立独立 Vue 3 + TypeScript + Vite + Tailwind CSS SPA，配置 Vue Router、类型化 API Client 和通用内容状态 | 独立前端 typecheck、生产构建通过；四路由直接访问均为 200；浏览器导航和刷新通过；控制台无警告或错误 | 已完成并提交：`6383df6` |
 | 2026-10-07 | 阶段 3 | 将 Home、About、Services、Contact 页面迁移到独立 SPA，并分别接入 Laravel API | 四页真实 PostgreSQL 内容、客户端导航、直接刷新、API 失败和重试恢复均经浏览器验证；类型检查和生产构建通过 | 已完成并提交：`5e03807` |
 | 2026-10-08 | 阶段 4 | 四页可见 CRUD、前后端校验、删除确认及立即重建、生产环境写入双重保护 | 前端 15 项测试通过；独立前端 typecheck/构建、Laravel 60 项测试/307 个断言及旧前端构建通过；使用临时 SQLite 完成浏览器 CRUD 验证，生产模式写入返回 403 且不显示写入控件 | 已完成并提交：`88cfd03` |
+| 2026-10-08 | 阶段 5 | 独立启动和部署说明、受限 CORS、前后端环境变量、Node.js 22 LTS 约束 | Node.js 22.23.3 下 `npm ci`、15 项前端测试、类型检查和构建通过；Laravel 61 项测试/315 个断言通过；独立服务、CORS 和浏览器读取验证通过 | 已完成，待用户确认；未提交 |
 
 每完成一个阶段，都要更新此表，记录实际交付内容、测试结果、未解决风险，以及用户确认提交后对应的提交记录。
 
@@ -458,3 +459,16 @@ resources/views/app.blade.php
 - 最终回归：独立前端 `npm test` 为 15 项通过，`npm run typecheck` 和默认生产构建通过；Laravel 为 60 项测试 / 307 个断言通过；根目录 Inertia 前端的 TypeScript 检查和生产构建通过。根目录构建只有既有的可选 `fontaine` 提示，`git diff --check` 通过。
 - 依赖安装生成锁文件后，标准 `npm ci --dry-run` 可通过，审计结果为 0 个漏洞。本机 Node.js 23 不在 Vitest 4 支持的 engine 范围内，当前测试仍通过；阶段 5 已计划把本地开发、CI 和生产构建版本统一固定为 Node.js 22 LTS。
 - 阶段 4 已在用户确认后提交为 `88cfd03`；阶段 5 和阶段 6 尚未执行。回滚时可撤销该提交，继续使用阶段 3 的只读 SPA。
+
+### 阶段 5 实施记录（2026-10-08）
+
+- 发布 Laravel `config/cors.php`，API 不再使用默认通配符来源。`FRONTEND_URL` 指定唯一允许的浏览器来源，本地默认值为 `http://localhost:5173`。
+- `.env.example` 新增 `FRONTEND_URL`；独立前端继续通过 `VITE_API_BASE_URL` 指向 API，并通过 `VITE_WRITES_ENABLED` 控制写入界面。
+- `frontend/.nvmrc` 固定 Node.js 22，`frontend/package.json` 的 `engines.node` 固定为 `22.x`，`frontend/.npmrc` 启用 `engine-strict`。Node.js 23 会明确返回 `EBADENGINE`，避免继续使用 Vitest 4 不支持的运行时。
+- README 已记录前后端分别安装、启动、测试和部署的命令，以及开发和生产环境变量。前端只部署 `frontend/dist/`，静态服务器需要回退到 `index.html`；API 部署不需要执行 npm 命令。
+- 新增 CORS Feature Test。配置来源的预检响应声明该来源；其他来源不会得到与请求来源匹配的 `Access-Control-Allow-Origin`，浏览器因此拒绝跨域访问。
+- Node.js 22.23.3 验证：`npm ci`、15 项 Vitest 测试、`npm run typecheck`、`npm run build` 和依赖审计均通过，未出现 `EBADENGINE`，审计为 0 个漏洞。
+- 独立运行验证：Laravel 临时运行于 `127.0.0.1:18006`，Vue Vite 临时运行于 `localhost:5173`；`/` 与 `/contact` 均返回 200。浏览器成功读取 PostgreSQL 的 Home 内容并显示写入控件，控制台无警告或错误。
+- 后端实际 CORS 预检为 204，并只声明 `http://localhost:5173`；API 实际读取返回 Home 数据。临时前后端服务已停止。
+- 最终回归：Laravel 61 项测试 / 315 个断言通过；Pint 和 `git diff --check` 通过；旧 Inertia 前端生产构建通过，仅保留既有的可选 `fontaine` 提示。Laravel CORS 配置可正常缓存，验证后已清除测试缓存。
+- 实际生产域名和 OpenAPI 生成时机仍按第 10 节保留为后续决定。阶段 6 尚未执行；本阶段尚未进行 Git 提交。
