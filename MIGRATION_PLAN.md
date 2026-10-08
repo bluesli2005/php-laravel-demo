@@ -268,7 +268,7 @@ frontend/.env.example
 
 ### 阶段 5：实现独立启动和独立部署
 
-状态：已完成（2026-10-08，待用户确认）
+状态：已完成（2026-10-08，已提交 Git）
 
 目标：
 
@@ -304,7 +304,7 @@ npm run dev
 
 ### 阶段 6：删除 Inertia 和旧前端文件
 
-状态：未开始
+状态：已完成（2026-10-08，待用户确认）
 
 前置条件：阶段 1 至阶段 5 已全部完成并得到确认。
 
@@ -393,7 +393,8 @@ resources/views/app.blade.php
 | 2026-10-07 | 阶段 2 | 建立独立 Vue 3 + TypeScript + Vite + Tailwind CSS SPA，配置 Vue Router、类型化 API Client 和通用内容状态 | 独立前端 typecheck、生产构建通过；四路由直接访问均为 200；浏览器导航和刷新通过；控制台无警告或错误 | 已完成并提交：`6383df6` |
 | 2026-10-07 | 阶段 3 | 将 Home、About、Services、Contact 页面迁移到独立 SPA，并分别接入 Laravel API | 四页真实 PostgreSQL 内容、客户端导航、直接刷新、API 失败和重试恢复均经浏览器验证；类型检查和生产构建通过 | 已完成并提交：`5e03807` |
 | 2026-10-08 | 阶段 4 | 四页可见 CRUD、前后端校验、删除确认及立即重建、生产环境写入双重保护 | 前端 15 项测试通过；独立前端 typecheck/构建、Laravel 60 项测试/307 个断言及旧前端构建通过；使用临时 SQLite 完成浏览器 CRUD 验证，生产模式写入返回 403 且不显示写入控件 | 已完成并提交：`88cfd03` |
-| 2026-10-08 | 阶段 5 | 独立启动和部署说明、受限 CORS、前后端环境变量、Node.js 22 LTS 约束 | Node.js 22.23.3 下 `npm ci`、15 项前端测试、类型检查和构建通过；Laravel 61 项测试/315 个断言通过；独立服务、CORS 和浏览器读取验证通过 | 已完成，待用户确认；未提交 |
+| 2026-10-08 | 阶段 5 | 独立启动和部署说明、受限 CORS、前后端环境变量、Node.js 22 LTS 约束 | Node.js 22.23.3 下 `npm ci`、15 项前端测试、类型检查和构建通过；Laravel 61 项测试/315 个断言通过；独立服务、CORS 和浏览器读取验证通过 | 已完成并提交：`a08ea2b` |
+| 2026-10-08 | 阶段 6 | 删除 Inertia、Laravel 内嵌 Vue、Web 页面路由和根目录 Node 构建工具链 | Laravel 58 项测试/282 个断言、Composer 校验、独立前端 15 项测试、类型检查和构建通过；API-only 路由与独立 SPA 经 HTTP 和浏览器验证 | 已完成，待用户确认；未提交 |
 
 每完成一个阶段，都要更新此表，记录实际交付内容、测试结果、未解决风险，以及用户确认提交后对应的提交记录。
 
@@ -471,4 +472,18 @@ resources/views/app.blade.php
 - 独立运行验证：Laravel 临时运行于 `127.0.0.1:18006`，Vue Vite 临时运行于 `localhost:5173`；`/` 与 `/contact` 均返回 200。浏览器成功读取 PostgreSQL 的 Home 内容并显示写入控件，控制台无警告或错误。
 - 后端实际 CORS 预检为 204，并只声明 `http://localhost:5173`；API 实际读取返回 Home 数据。临时前后端服务已停止。
 - 最终回归：Laravel 61 项测试 / 315 个断言通过；Pint 和 `git diff --check` 通过；旧 Inertia 前端生产构建通过，仅保留既有的可选 `fontaine` 提示。Laravel CORS 配置可正常缓存，验证后已清除测试缓存。
-- 实际生产域名和 OpenAPI 生成时机仍按第 10 节保留为后续决定。阶段 6 尚未执行；本阶段尚未进行 Git 提交。
+- 实际生产域名和 OpenAPI 生成时机仍按第 10 节保留为后续决定。阶段 5 已在用户确认后提交为 `a08ea2b`；阶段 6 在本记录完成时尚未执行。
+
+### 阶段 6 实施记录（2026-10-08）
+
+- Composer 已移除 `inertiajs/inertia-laravel`；`bootstrap/app.php` 不再注册 Web 路由或 Inertia middleware，只保留 API、Console、健康检查和默认 middleware 初始化。
+- 删除 `HandleInertiaRequests`、`routes/web.php`、旧 Inertia Feature Test、Blade 根模板，以及 `resources/css` 和 `resources/js` 中的旧 Vue 页面与入口。
+- 保留空的 `resources/views/.gitkeep`，因为 Laravel `php artisan optimize` 的 view cache 仍要求该目录存在；目录中没有 Blade 业务页面。
+- 删除根目录 `package.json`、`package-lock.json`、`.npmrc`、`tsconfig.json` 和 `vite.config.js`。Laravel 后端安装、开发和生产部署不再需要 Node.js；Composer setup 不再执行 npm。
+- 删除本地根目录 `node_modules`、`public/build`、Inertia devtools 和已编译 Blade 缓存。独立前端的源码、依赖和 `frontend/dist/` 不受影响。
+- README 和 ARCHITECTURE 已改为最终前后端分离结构，不再把 Inertia 或 Laravel 内嵌 Vue 描述为当前运行方式。
+- 路由检查只显示 5 条 `/api/v1/welcome-messages` 资源路由；Laravel 根路径 `/` 返回 404，健康检查 `/up` 返回 200，API 实际读取 PostgreSQL 数据正常。
+- 浏览器验证：独立 SPA Home 和 About 正常读取 PostgreSQL 内容，Vue Router 导航成功，写入控件存在，控制台无警告或错误。临时 Laravel 和 Vite 服务已停止。
+- 新增 API-only 边界测试，固定 `/`、`/about`、`/services` 和 `/contact` 在 Laravel 后端均返回 404，防止旧页面路由被误加回来。
+- 最终回归：Laravel 58 项测试 / 282 个断言通过；Composer 严格校验和离线安装 dry-run 通过；`php artisan optimize` 全部成功并在验证后清理缓存；Pint 通过；Node.js 22 下独立前端 15 项测试、类型检查和生产构建通过；`git diff --check` 通过。
+- 阶段 6 尚未进行 Git 提交。用户确认后应以独立提交保存，便于整体回滚删除操作。
