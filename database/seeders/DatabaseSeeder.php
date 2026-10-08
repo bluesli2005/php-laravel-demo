@@ -26,5 +26,17 @@ class DatabaseSeeder extends Seeder
         ], [
             'content' => 'Welcome to About!',
         ]);
+
+        WelcomeMessage::query()->firstOrCreate([
+            'page' => 'services',
+        ], [
+            'content' => 'This is the Services page.',
+        ]);
+
+        WelcomeMessage::query()->firstOrCreate([
+            'page' => 'contact',
+        ], [
+            'content' => 'This is the Contact page.',
+        ]);
     }
 }
