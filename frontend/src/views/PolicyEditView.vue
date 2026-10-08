@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiWritesEnabled, ApiError } from '../api/client';
 import { getLifeInsurancePolicy, updateLifeInsurancePolicy } from '../api/lifeInsurancePolicies';
-import LifeInsurancePolicyForm from '../components/lifeInsurancePolicyForm.vue';
+import LifeInsurancePolicyForm from '../components/LifeInsurancePolicyForm.vue';
 import { policyToPayload, type LifeInsurancePolicy, type LifeInsurancePolicyPayload } from '../types/lifeInsurancePolicy';
 
 const route = useRoute();

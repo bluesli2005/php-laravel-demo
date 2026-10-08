@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { apiWritesEnabled, ApiError } from '../api/client';
 import { createLifeInsurancePolicy } from '../api/lifeInsurancePolicies';
-import LifeInsurancePolicyForm from '../components/lifeInsurancePolicyForm.vue';
+import LifeInsurancePolicyForm from '../components/LifeInsurancePolicyForm.vue';
 import { emptyPolicyPayload, type LifeInsurancePolicyPayload } from '../types/lifeInsurancePolicy';
 
 const router = useRouter();

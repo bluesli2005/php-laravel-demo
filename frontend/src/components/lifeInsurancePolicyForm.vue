@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 import { ApiError } from '../api/client';
+import BaseButton from './BaseButton.vue';
+import BaseErrorMessage from './BaseErrorMessage.vue';
+import BaseInput from './BaseInput.vue';
+import BaseSelect from './BaseSelect.vue';
+import BaseTextarea from './BaseTextarea.vue';
 import {
     emptyPolicyPayload,
     policyStatuses,
@@ -30,6 +35,10 @@ const form = reactive<LifeInsurancePolicyPayload>({
 });
 const fieldErrors = ref<Record<string, string>>({});
 const formError = ref('');
+const statusOptions = policyStatuses.map((status) => ({
+    value: status,
+    label: policyStatusLabels[status],
+}));
 
 const isDisabled = computed(() => props.saving || !props.writesEnabled);
 
@@ -111,78 +120,74 @@ defineExpose({ applyApiError });
 
 <template>
     <form class="grid gap-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm" @submit.prevent="submit">
-        <div v-if="formError" class="rounded-md bg-red-50 p-3 text-sm text-red-800" role="alert">
-            {{ formError }}
-        </div>
+        <BaseErrorMessage v-if="formError" :message="formError" />
 
         <div class="grid gap-5 sm:grid-cols-2">
             <label class="grid gap-2 text-sm font-semibold">
                 保单号
-                <input v-model="form.policy_number" :aria-invalid="!!getFieldError('policy_number')" class="form-input" maxlength="50" />
-                <span v-if="getFieldError('policy_number')" class="font-normal text-red-700">{{ getFieldError('policy_number') }}</span>
+                <BaseInput v-model="form.policy_number" id="policy-number" :aria-invalid="!!getFieldError('policy_number')" maxlength="50" />
+                <BaseErrorMessage :message="getFieldError('policy_number')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 状态
-                <select v-model="form.status" class="form-input">
-                    <option v-for="status in policyStatuses" :key="status" :value="status">{{ policyStatusLabels[status] }}</option>
-                </select>
+                <BaseSelect v-model="form.status" id="policy-status" :options="statusOptions" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 投保人姓名
-                <input v-model="form.policyholder_name" :aria-invalid="!!getFieldError('policyholder_name')" class="form-input" maxlength="100" />
-                <span v-if="getFieldError('policyholder_name')" class="font-normal text-red-700">{{ getFieldError('policyholder_name') }}</span>
+                <BaseInput v-model="form.policyholder_name" id="policyholder-name" :aria-invalid="!!getFieldError('policyholder_name')" maxlength="100" />
+                <BaseErrorMessage :message="getFieldError('policyholder_name')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 被保险人姓名
-                <input v-model="form.insured_name" :aria-invalid="!!getFieldError('insured_name')" class="form-input" maxlength="100" />
-                <span v-if="getFieldError('insured_name')" class="font-normal text-red-700">{{ getFieldError('insured_name') }}</span>
+                <BaseInput v-model="form.insured_name" id="insured-name" :aria-invalid="!!getFieldError('insured_name')" maxlength="100" />
+                <BaseErrorMessage :message="getFieldError('insured_name')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 被保险人出生日期
-                <input v-model="form.insured_birth_date" :aria-invalid="!!getFieldError('insured_birth_date')" class="form-input" type="date" />
-                <span v-if="getFieldError('insured_birth_date')" class="font-normal text-red-700">{{ getFieldError('insured_birth_date') }}</span>
+                <BaseInput v-model="form.insured_birth_date" id="insured-birth-date" :aria-invalid="!!getFieldError('insured_birth_date')" type="date" />
+                <BaseErrorMessage :message="getFieldError('insured_birth_date')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 受益人姓名
-                <input v-model="form.beneficiary_name" class="form-input" maxlength="100" />
+                <BaseInput v-model="form.beneficiary_name" id="beneficiary-name" maxlength="100" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 保额
-                <input v-model="form.coverage_amount" :aria-invalid="!!getFieldError('coverage_amount')" class="form-input" min="0" step="0.01" type="number" />
-                <span v-if="getFieldError('coverage_amount')" class="font-normal text-red-700">{{ getFieldError('coverage_amount') }}</span>
+                <BaseInput v-model="form.coverage_amount" id="coverage-amount" :aria-invalid="!!getFieldError('coverage_amount')" min="0" step="0.01" type="number" />
+                <BaseErrorMessage :message="getFieldError('coverage_amount')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 保费
-                <input v-model="form.premium_amount" :aria-invalid="!!getFieldError('premium_amount')" class="form-input" min="0" step="0.01" type="number" />
-                <span v-if="getFieldError('premium_amount')" class="font-normal text-red-700">{{ getFieldError('premium_amount') }}</span>
+                <BaseInput v-model="form.premium_amount" id="premium-amount" :aria-invalid="!!getFieldError('premium_amount')" min="0" step="0.01" type="number" />
+                <BaseErrorMessage :message="getFieldError('premium_amount')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 币种
-                <input v-model="form.currency" class="form-input uppercase" maxlength="3" />
+                <BaseInput v-model="form.currency" id="currency" maxlength="3" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 生效日期
-                <input v-model="form.effective_date" :aria-invalid="!!getFieldError('effective_date')" class="form-input" type="date" />
-                <span v-if="getFieldError('effective_date')" class="font-normal text-red-700">{{ getFieldError('effective_date') }}</span>
+                <BaseInput v-model="form.effective_date" id="effective-date" :aria-invalid="!!getFieldError('effective_date')" type="date" />
+                <BaseErrorMessage :message="getFieldError('effective_date')" />
             </label>
             <label class="grid gap-2 text-sm font-semibold">
                 失效日期
-                <input v-model="form.expiry_date" :aria-invalid="!!getFieldError('expiry_date')" class="form-input" type="date" />
-                <span v-if="getFieldError('expiry_date')" class="font-normal text-red-700">{{ getFieldError('expiry_date') }}</span>
+                <BaseInput v-model="form.expiry_date" id="expiry-date" :aria-invalid="!!getFieldError('expiry_date')" type="date" />
+                <BaseErrorMessage :message="getFieldError('expiry_date')" />
             </label>
         </div>
 
         <label class="grid gap-2 text-sm font-semibold">
             备注
-            <textarea v-model="form.notes" :aria-invalid="!!getFieldError('notes')" class="form-input min-h-28" maxlength="1000"></textarea>
-            <span v-if="getFieldError('notes')" class="font-normal text-red-700">{{ getFieldError('notes') }}</span>
+            <BaseTextarea v-model="form.notes" id="policy-notes" :aria-invalid="!!getFieldError('notes')" maxlength="1000" />
+            <BaseErrorMessage :message="getFieldError('notes')" />
         </label>
 
         <div class="flex flex-wrap gap-3">
-            <button :disabled="isDisabled" class="button-primary" type="submit">
+            <BaseButton :disabled="isDisabled" type="submit">
                 {{ saving ? '保存中…' : '保存保单' }}
-            </button>
-            <button :disabled="saving" class="button-secondary" type="button" @click="emit('cancel')">取消</button>
+            </BaseButton>
+            <BaseButton :disabled="saving" type="button" variant="secondary" @click="emit('cancel')">取消</BaseButton>
         </div>
     </form>
 </template>

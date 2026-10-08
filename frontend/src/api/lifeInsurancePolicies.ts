@@ -5,8 +5,27 @@ import type {
     PolicyStatus,
 } from '../types/lifeInsurancePolicy';
 
-export async function getLifeInsurancePolicies(signal?: AbortSignal): Promise<LifeInsurancePolicy[]> {
-    const data = getEnvelopeData(await apiRequest('/api/v1/life-insurance-policies', {
+export interface LifeInsurancePolicyFilters {
+    search?: string;
+    status?: PolicyStatus | '';
+}
+
+export async function getLifeInsurancePolicies(
+    filters: LifeInsurancePolicyFilters = {},
+    signal?: AbortSignal,
+): Promise<LifeInsurancePolicy[]> {
+    const params = new URLSearchParams();
+
+    if (filters.search?.trim() !== '') {
+        params.set('search', filters.search?.trim() ?? '');
+    }
+
+    if (filters.status !== undefined && filters.status !== '') {
+        params.set('status', filters.status);
+    }
+
+    const query = params.toString();
+    const data = getEnvelopeData(await apiRequest(`/api/v1/life-insurance-policies${query ? `?${query}` : ''}`, {
         cache: 'no-store',
         signal,
     }));

@@ -85,4 +85,25 @@ class LifeInsurancePolicyTest extends TestCase
         $this->assertDatabaseCount('life_insurance_policies', 3);
         $this->assertDatabaseHas('life_insurance_policies', ['policy_number' => 'POL-0001']);
     }
+
+    public function test_list_can_filter_by_search_and_status(): void
+    {
+        $this->seed();
+
+        $this->getJson('/api/v1/life-insurance-policies?search=张&status=active')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.policy_number', 'POL-0001');
+
+        $this->getJson('/api/v1/life-insurance-policies?status=cancelled')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_invalid_status_filter_returns_422(): void
+    {
+        $this->getJson('/api/v1/life-insurance-policies?status=unknown')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
+    }
 }
